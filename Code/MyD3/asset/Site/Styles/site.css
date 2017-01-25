@@ -1,0 +1,24 @@
+﻿body {
+}
+
+a {
+    cursor: pointer;
+}
+
+/* 搜索框上面的按钮容器 */
+.button-list {
+    padding: 0 0 0 25px;
+}
+
+.modal .modal-body {
+    max-height: 620px;
+    overflow-y: auto;
+}
+
+.tabpanel .tab-nav .error a {
+    color: red;
+}
+
+.tabpanel .tab-nav .error ::after {
+    background-color: red;
+}

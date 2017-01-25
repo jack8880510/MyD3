@@ -1,0 +1,497 @@
+﻿<script type="text/x-jsrender" id="dictionary_edit_modal">
+    <div class="modal fade dictionary_model" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">
+                        {{if !ID}}
+                        新建字典数据
+                        {{else}}
+                        编辑字典数据 - {{> Name}}
+                        {{/if}}
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <form id="index_form" class="row">
+                        <input type="hidden" name="ID" value="{{:ID}}" />
+                        <div class="col-sm-12">
+                            <div class="form-group fg-float">
+                                <div class="fg-line">
+                                    <input type="text" name="Index" value="{{>Index}}" {{if ID}} readonly="readonly" {{/if}} maxlength="50" class="input-sm form-control fg-input" />
+                                </div>
+                                <label class="fg-label">索引*</label>
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            <div class="form-group fg-float">
+                                <div class="fg-line">
+                                    <input type="text" name="Name" value="{{>Name}}" maxlength="25" class="input-sm form-control fg-input" />
+                                </div>
+                                <label class="fg-label">显示名*</label>
+                            </div>
+                        </div>
+                    </form>
+
+                    <form id="data_form" class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group fg-line">
+                                <label for="DataName" class="sr-only">数据名：</label>
+                                <input type="text" name="DataName" maxlength="25" placeholder="数据名" class="input-sm form-control" />
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group fg-line">
+                                <label for="DataValue" class="sr-only">数据值：</label>
+                                <input type="text" name="DataValue" maxlength="100" placeholder="数据值" class="input-sm form-control" />
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <button type="button" id="addData" class="btn btn-primary btn-sm m-t-5 waves-effect">新增字典数据</button>
+                            <button type="button" id="updateData" class="btn bgm-green btn-sm m-t-5 waves-effect hide">修改字典数据</button>
+                            <button type="button" id="cancel" class="btn bgm-gray btn-sm m-t-5 waves-effect hide">放弃</button>
+                        </div>
+                    </form>
+
+                    <div class="data-table" style="max-height:400px; overflow-y:auto">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>名称</th>
+                                    <th>值</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{include tmpl="#dictionary-data-tbody" /}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" data-dismiss="modal" class="btn btn-default">关闭</button>
+                    <button type="button" id="save" class="btn btn-primary {{if !ID}}bgm-green{{/if}}">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script type="text/x-jsrender" id="dictionary-data-tbody">
+    {{if Data.length > 0}}
+    {{for Data tmpl="#dictionary-data-row" /}}
+    {{else}}
+    <tr>
+        <td colspan="5">
+            暂无字典数据
+        </td>
+    </tr>
+    {{/if}}
+</script>
+
+<script type="text/x-jsrender" id="dictionary-data-row">
+    <tr data-order-no="{{:OrderNo}}">
+        <td class="data-order-no">{{:OrderNo}}</td>
+        <td class="data-name">{{>Name}}</td>
+        <td class="data-value">{{>Value}}</td>
+        <td class="data-status">
+            {{if Status == 0}}
+            启用
+            {{else}}
+            禁用
+            {{/if}}
+        </td>
+        <td class="data-command">
+            <a href="#" class="data-edit" data-order-no="{{>OrderNo}}">编辑</a>
+            {{if Status == 0}}
+            <a href="#" class="data-disable" data-order-no="{{>OrderNo}}">禁用</a>
+            {{else}}
+            <a href="#" class="data-enable" data-order-no="{{>OrderNo}}">启用</a>
+            {{/if}}
+        </td>
+    </tr>
+</script>
+
+<!-- 对话框相关脚本 -->
+<script type="text/javascript" id="dialog_script">
+    function init_index_validator(target) {
+        target.validate({
+            errorElement: 'div',
+            errorClass: 'help-block',
+            focusInvalid: true,
+            rules: {
+                Index: {
+                    required: true
+                },
+                Name: {
+                    required: true
+                }
+            },
+            messages: {
+                Index: {
+                    required: "索引不能为空"
+                },
+                Name: {
+                    required: "请输入显示名",
+                }
+            },
+            highlight: function (e) {
+                $(e).closest('.form-group').addClass('has-error');
+            },
+            success: function (e) {
+                $(e).closest('.form-group').removeClass('has-error');
+                $(e).remove();
+            },
+            errorPlacement: function (error, element) {
+                error.insertAfter(element.parent());
+            }
+        });
+    }
+
+    function init_data_validator(target) {
+        //新增自定义验证方法
+        $.validator.addMethod("DictionaryDataExists", DictionaryDataExists_ValidateMethod);
+
+        target.validate({
+            errorElement: 'div',
+            errorClass: 'help-block',
+            focusInvalid: true,
+            rules: {
+                DataName: {
+                    required: true
+                },
+                DataValue: {
+                    required: true,
+                    DictionaryDataExists: true,
+                }
+            },
+            messages: {
+                DataName: {
+                    required: "数据名不能为空"
+                },
+                DataValue: {
+                    required: "数据值不能为空",
+                    DictionaryDataExists: "该数据值已经在索引中存在"
+                }
+            },
+            highlight: function (e) {
+                $(e).closest('.form-group').addClass('has-error');
+            },
+            success: function (e) {
+                $(e).closest('.form-group').removeClass('has-error');
+                $(e).remove();
+            },
+            errorPlacement: function (error, element) {
+                error.insertAfter(element);
+            }
+        });
+    }
+
+    /**
+     * 以新增方式打开
+     */
+    function dialog_new() {
+        var data = {
+            ID: null,
+            Index: null,
+            Name: null,
+            Data: []
+        };
+
+        var modal_html = $($("#dictionary_edit_modal").render(data));
+
+        set_dialog_attr(modal_html, "@Url.Action("Post", "Dictionary")", "post", data);
+    }
+
+    /**
+     * 以编辑方式打开
+     */
+    function dialog_edit(index_id) {
+        jackTool.tools.net.get('@Url.Action("Get", "Dictionary")' + '/' + index_id, function (result) {
+            if (result.RCode == 0) {
+                var modal_html = $($("#dictionary_edit_modal").render(result.Data));
+
+                set_dialog_attr(modal_html, "@Url.Action("Put", "Dictionary")", "put", result.Data);
+            } else {
+                swal({
+                    title: "失败",
+                    text: result.RMsg,
+                    type: "error",
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
+        });
+    }
+
+    /**
+     * 为对话框中的内容提供初始值设定
+     */
+    function set_dialog_attr(dialog, form_action, form_method, data) {
+        $(".dictionary_model").remove();
+
+        //设置Dialog不会在点击其他地方时被关闭
+        dialog.modal({
+            backdrop: "static"
+        });
+
+        //初始化基础信息验证
+        init_index_validator(dialog.find("#index_form"));
+        //初始化数据信息验证
+        init_data_validator(dialog.find("#data_form"));
+
+        //初始化悬浮输入框LABLE
+        jackTool.tools.view.build_fg_input(dialog);
+
+        //初始化保存按钮点击
+        dialog.find("#save").data("action", form_action);
+        dialog.find("#save").data("method", form_method);
+        dialog.find("#save").on("click", btnSave_click);
+
+        dialog.find("#addData").data("dictionary-data", data.Data);
+        dialog.find("#addData").on("click", btnAddData_click);
+        dialog.find("#updateData").on("click", btnUpdateData_click);
+        dialog.find("#cancel").on("click", btnCancel_click);
+
+        bindRowEvent(dialog);
+    }
+
+    /**
+    * 判断数据字典数据是否已经存在的验证方法
+    */
+    function DictionaryDataExists_ValidateMethod(value, element, params) {
+        //获取元数据集合
+        var dataList = $(".dictionary_model #addData").data("dictionary-data");
+
+        //获取当前编辑对象的OrderNo
+        var editOrderNo = $(".dictionary_model #updateData").data("edit-order-no");
+
+        var target = _.findWhere(dataList, { Value: value });
+
+        return !target || target.OrderNo == editOrderNo;
+    }
+
+    /**
+    * 刷新指定行的信息
+    */
+    function refresh_row_data(orderNo, data) {
+        var tr = $(".dictionary_model .data-table table tbody tr[data-order-no=" + orderNo + "]");
+
+        //创建新的行
+        var newTr = $($("#dictionary-data-row").render(data));
+        //初始化行按钮事件
+        bindRowEvent(newTr);
+
+        tr.after(newTr);
+        tr.remove();
+    }
+
+    /**
+    * 保存按钮点击事件
+    */
+    function btnSave_click(e) {
+        //验证信息
+        if (!$("#index_form").valid()) {
+            return;
+        }
+
+        //开始组装数据
+        var action = $(".dictionary_model #save").data("action");
+        var method = $(".dictionary_model #save").data("method");
+        var data = {
+            ID: $(".dictionary_model input[name=ID]").val(),
+            Index: $(".dictionary_model input[name=Index]").val(),
+            Name: $(".dictionary_model input[name=Name]").val(),
+            Data: $(".dictionary_model #addData").data("dictionary-data")
+        };
+
+        //显示Loading界面
+        swal({
+            title: "处理中",
+            text: "请稍后......",
+            type: "info",
+            showConfirmButton: false,
+        })
+
+        //数据组装完毕开始提交
+        if (method.toUpperCase() == "POST") {
+            jackTool.tools.net.post(action, data, btnSave_callback);
+        } else {
+            jackTool.tools.net.put(action, data, btnSave_callback);
+        }
+    }
+
+    /**
+    * 保存回调
+    */
+    function btnSave_callback(result) {
+        if (result.RCode == 0) {
+            $(".dictionary_model").modal("hide");
+            $("#data-table-command").bootgrid("reload");
+            swal({
+                title: "成功",
+                text: "数据字典数据更新成功",
+                type: "success",
+                showConfirmButton: false,
+                timer: 2000
+            });
+        } else {
+            swal({
+                title: "失败",
+                text: result.RMsg,
+                type: "error",
+                showConfirmButton: false,
+                timer: 2000
+            });
+        }
+    }
+
+    /**
+    * 修改字典数据按钮点击事件
+    */
+    function btnUpdateData_click(e) {
+        if (!$("#data_form").valid()) {
+            return;
+        }
+
+        //获取元数据集合
+        var dataList = $(".dictionary_model #addData").data("dictionary-data");
+
+        //获取本次修改的数据对象
+        var target = _.findWhere(dataList, { OrderNo: $(this).data("edit-order-no") });
+
+        //重新赋值数据和名称
+        target.Name = $(".dictionary_model #data_form input[name=DataName]").val();
+        if (!target.ID) {
+            target.Value = $(".dictionary_model #data_form input[name=DataValue]").val();
+        }
+
+        //刷新对应的行
+        refresh_row_data(target.OrderNo, target);
+
+        //还原界面
+        btnCancel_click(e);
+    }
+
+    /**
+    * 放弃修改点击事件
+    */
+    function btnCancel_click(e) {
+        $("#updateData").data("edit-order-no", "");
+        $("#addData").removeClass("hide");
+        $("#updateData").addClass("hide");
+        $("#cancel").addClass("hide");
+        $(".dictionary_model #data_form input").val("");
+        $(".dictionary_model #data_form input[name=DataName]").focus();
+        $(".dictionary_model #data_form input[name=DataValue]").removeAttr("readonly");
+        $(".dictionary_model #data_form .hasError").removeClass(".hasError");
+    }
+
+    /**
+    * 新增字典数据按钮点击事件
+    */
+    function btnAddData_click(e) {
+        if (!$("#data_form").valid()) {
+            return;
+        }
+
+        //获取总记录
+        var dataList = $(".dictionary_model #addData").data("dictionary-data");
+
+        //封装一条字典数据对象
+        var newData = {
+            Name: $(".dictionary_model #data_form input[name=DataName]").val(),
+            Value: $(".dictionary_model #data_form input[name=DataValue]").val(),
+            Status: 0,
+            OrderNo: dataList.length == 0 ? 1 : _.max(dataList, function (item) { return item.OrderNo }).OrderNo + 1
+        };
+
+        //加入到数组中
+        dataList.push(newData);
+
+        if (dataList.length == 1) {
+            //如果当前数据集中只有一条数据则轻松当前页面元素内容
+            $(".dictionary_model .data-table table tbody tr").remove();
+        }
+        //提取本次渲染所需的HTML
+        var html = $($("#dictionary-data-row").render(newData));
+        //绑定行按钮事件
+        bindRowEvent(html);
+        //追加到父容器中
+        $(".dictionary_model .data-table table tbody").append(html);
+
+        //清除输入框原始数据
+        $(".dictionary_model #data_form input").val("");
+        $(".dictionary_model #data_form input[name=DataName]").focus();
+    }
+
+    /**
+    * 给指定上下文中的行按钮绑定事件处理
+    */
+    function bindRowEvent(context) {
+        context.find(".data-edit").on("click", btnDataEditClick);
+        context.find(".data-disable").on("click", btnDataDisableClick)
+        context.find(".data-enable").on("click", btnDataEnableClick)
+    }
+
+    /**
+    * 编辑按钮点击事件
+    */
+    function btnDataEditClick(e) {
+        //获取原始数据列表
+        var dataList = $(".dictionary_model #addData").data("dictionary-data");
+
+        //获取本次修改的数据对象
+        var target = _.findWhere(dataList, { OrderNo: $(this).data("order-no") });
+
+        //设置到控件
+        $(".dictionary_model #data_form input[name=DataName]").val(target.Name);
+        $(".dictionary_model #data_form input[name=DataValue]").val(target.Value);
+        $("#updateData").data("edit-order-no", target.OrderNo);
+        $("#addData").addClass("hide");
+        $("#updateData").removeClass("hide");
+        $("#cancel").removeClass("hide");
+        $(".dictionary_model #data_form input[name=DataName]").focus();
+        if (target.ID) {
+            $(".dictionary_model #data_form input[name=DataValue]").attr("readonly", "readonly");
+        } else {
+            $(".dictionary_model #data_form input[name=DataValue]").removeAttr("readonly");
+        }
+
+        //强制进行一次验证以消除页面上遗留的验证消息
+        $("#data_form").valid();
+    }
+
+    /**
+    * 修改字典数据状态
+    */
+    function change_data_status(orderNo, status) {
+        //获取原始数据列表
+        var dataList = $(".dictionary_model #addData").data("dictionary-data");
+
+        //获取本次修改的数据对象
+        var target = _.findWhere(dataList, { OrderNo: orderNo });
+
+        //设置状态
+        target.Status = status;
+
+        //刷新对应的行
+        refresh_row_data(orderNo, target);
+    }
+
+    /**
+    * 禁用数据
+    */
+    function btnDataDisableClick(e) {
+        change_data_status($(this).data("order-no"), 1);
+    }
+
+    /**
+    * 启用数据
+    */
+    function btnDataEnableClick(e) {
+        change_data_status($(this).data("order-no"), 0);
+    }
+</script>

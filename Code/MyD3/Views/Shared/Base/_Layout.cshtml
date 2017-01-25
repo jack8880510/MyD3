@@ -1,0 +1,79 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">   
+    <title>@ViewBag.Title</title>
+    @Styles.Render("~/bundles/Components/style")
+    @Styles.Render("~/bundles/Components/style/app1")
+    @Styles.Render("~/bundles/Components/style/app2")
+    @Styles.Render("~/bundles/site/styles")
+    @RenderSection("style", required: false)
+</head>
+<body>
+    @Html.Partial("~/Views/Shared/Base/_LayoutHeaderPartial.cshtml");
+
+    <section id="main">
+        <aside id="sidebar">
+            <div class="sidebar-inner c-overflow">
+                @Html.Partial("~/Views/Shared/Base/_LayoutProfileMenuPartial.cshtml");
+
+                @Html.Partial("~/Views/Shared/Base/_LayoutSideMenuPartial.cshtml");
+            </div>
+        </aside>
+        <section id="content">
+            <div class="container">
+                <div class="block-header">
+                    <h2>@ViewBag.Module</h2>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2>@ViewBag.Title <small>@ViewBag.Desceiption</small></h2>
+                    </div>
+                    <div class="button-list">
+                        @RenderSection("button_list", required: false)
+                    </div>
+                    <div class="card-body card-padding">
+                        @RenderBody()
+                    </div>
+                </div>
+            </div>
+        </section>
+    </section>
+
+    @Html.Partial("~/Views/Shared/Base/_LayoutFootPartial.cshtml");
+
+    @Scripts.Render("~/bundles/Components/Base")
+    @Scripts.Render("~/bundles/Components/nicescroll")
+    @Scripts.Render("~/bundles/Components/Waves")
+    @Scripts.Render("~/bundles/Components/bootstrap-growl")
+    @Scripts.Render("~/bundles/Components/SweetAlert")
+    @Scripts.Render("~/bundles/Components/bootgrid");
+    @Scripts.Render("~/bundles/Components/bootstrap-select");
+    @*此处需要注意，jackTool库需要在DateTimePick之前初始化，以便设置Moment*@
+    @Scripts.Render("~/bundles/jack-tool")
+    @Scripts.Render("~/bundles/Components/datetimePicker");
+    @RenderSection("scripts", required: false)
+
+    <script type="text/javascript">
+        $(function () {
+            //设置用户名称到用户信息区域
+            $(".login-user-name").html(jackTool.logininfo.getUserName());
+
+            //设置当前路由信息
+            jackTool.tools.url.set("@ViewContext.RouteData.Values["area"]",
+                "@ViewContext.RouteData.Values["controller"]",
+                "@ViewContext.RouteData.Values["action"]");
+            //设置当前页面TreePath
+            jackTool.tools.url.setPageTreePath("@ViewBag.PageTreePath");
+
+            //权限处理
+            jackTool.security.parse();
+        });
+    </script>
+</body>
+</html>

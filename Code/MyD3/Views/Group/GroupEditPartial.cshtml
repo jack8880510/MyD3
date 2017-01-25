@@ -1,0 +1,184 @@
+﻿<script type="text/x-jsrender" id="group_edit_modal">
+    <div class="modal fade group_model" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">
+                        {{if !ID}}
+                        新建分组
+                        {{else}}
+                        编辑分组 - {{: Name}}
+                        {{/if}}
+                    </h4>
+                </div>
+                <form id="group_form">
+                    <div class="modal-body">
+                        <input type="hidden" name="ID" value="{{:ID}}" />
+                        <div class="form-group fg-float">
+                            <div class="fg-line">
+                                <input type="text" name="Name" value="{{>Name}}" maxlength="25" class="input-sm form-control fg-input" />
+                            </div>
+                            <label class="fg-label">分组名*</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" data-dismiss="modal" class="btn btn-default">关闭</button>
+                        <button type="submit" id="save" class="btn btn-primary {{if !ID}}bgm-green{{/if}}">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</script>
+
+<!-- 编辑对话框相关脚本 -->
+<script type="text/javascript" id="edit_dialog">
+    function init_form_validator(target_form) {
+        target_form.validate({
+            errorElement: 'div',
+            errorClass: 'help-block',
+            focusInvalid: true,
+            rules: {
+                Name: {
+                    required: true,
+                    minlength: 2
+                }
+            },
+            messages: {
+                Name: {
+                    required: "分组名不能为空",
+                    minlength: "分组名至少需要2位",
+                }
+            },
+            highlight: function (e) {
+                $(e).closest('.form-group').addClass('has-error');
+            },
+            success: function (e) {
+                $(e).closest('.form-group').removeClass('has-error');
+                $(e).remove();
+            },
+            errorPlacement: function (error, element) {
+                error.insertAfter(element.parent());
+            }
+        });
+    }
+
+    function init_ajax_form(target_form, action, method) {
+        /* ===================== 初始化Form =========================*/
+        target_form.ajaxForm({
+            url: action,
+            type: method,
+            dataType: 'json',
+            contentType: "application/x-www-form-urlencoded; charset=utf-8",
+            beforeSerialize: function (form, options) {
+                //序列化前先调用validation控件进行验证
+                return $(form).valid();
+            },
+            beforeSubmit: function (data, form, options) {
+                //防止重复提交，禁用提交按钮
+                $('#group_form button:submit').text("正在处理");
+                $('#group_form button:submit').attr('disabled', 'disabled');
+                $('#group_form input').attr('disabled', 'disabled');
+            },
+            success: function (result) {
+                //开放控件
+                $('#group_form button:submit').text("保存");
+                $('#group_form button:submit').removeAttr('disabled');
+                $('#group_form input').removeAttr('disabled');
+
+                if (result.RCode == 0) {
+                    $(".group_model").modal("hide");
+                    $("#data-table-command").bootgrid("reload");
+                    swal({
+                        title: "成功",
+                        text: "新分组保存成功",
+                        type: "success",
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                } else {
+                    swal({
+                        title: "失败",
+                        text: result.RMsg,
+                        type: "error",
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                }
+            },
+            error: function (result) {
+                //开放控件
+                $('#group_form button:submit').text("保存");
+                $('#group_form button:submit').removeAttr('disabled');
+                $('#group_form input').removeAttr('disabled');
+                swal({
+                    title: "失败",
+                    text: decodeURI(result.getResponseHeader("statusText")),
+                    type: "error",
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
+        });
+    }
+
+    /**
+     * 以新增方式打开
+     */
+    function dialog_new() {
+        var modal_html = $($("#group_edit_modal").render({
+            ID: null,
+            Name: null
+        }));
+
+        set_dialog_attr(modal_html, "#group_form", "@Url.Action("Post", "Group")", "post");
+    }
+    /**
+     * 以编辑方式打开
+     */
+    function dialog_edit(group_id) {
+        jackTool.tools.net.get('@Url.Action("Get", "Group")' + '/' + group_id, function (result) {
+            if (result.RCode == 0) {
+                var data = {
+                    ID: result.Data.ID,
+                    Name: result.Data.Name
+                };
+
+                var modal_html = $($("#group_edit_modal").render(data));
+
+                set_dialog_attr(modal_html, "#group_form", "@Url.Action("Put", "Group")", "put");
+            } else {
+                swal({
+                    title: "失败",
+                    text: result.RMsg,
+                    type: "error",
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
+        });
+    }
+
+    /**
+     * 为对话框中的内容提供初始值设定
+     */
+    function set_dialog_attr(dialog, form_selector, form_action, form_method) {
+        //清除上一次残留数据
+        $(".group_model").remove();
+
+        //设置Dialog不会在点击其他地方时被关闭
+        dialog.modal({
+            backdrop: "static"
+        });
+
+        //初始化表单相关内容
+        var form = dialog.find(form_selector);
+        //初始化表单验证
+        init_form_validator(form);
+        //初始化表单
+        init_ajax_form(form, form_action, form_method);
+        //初始化悬浮输入框LABLE
+        jackTool.tools.view.build_fg_input(dialog);
+    }
+</script>

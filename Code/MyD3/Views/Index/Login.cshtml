@@ -1,0 +1,112 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MyD3 Schema Demo - 登录</title>
+
+    @Styles.Render("~/bundles/Components/style")
+    @Styles.Render("~/bundles/Components/style/app1")
+    @Styles.Render("~/bundles/Components/style/app2")
+</head>
+
+<body class="login-content">
+    <!-- Login -->
+    <div class="lc-block toggled" id="l-login" style="margin-top:310px">
+        <div class="input-group m-b-20">
+            <span class="input-group-addon"><i class="zmdi zmdi-account"></i></span>
+            <div class="fg-line">
+                <input type="text" class="form-control user-name" placeholder="用户名">
+            </div>
+        </div>
+
+        <div class="input-group m-b-20">
+            <span class="input-group-addon"><i class="zmdi zmdi-male"></i></span>
+            <div class="fg-line">
+                <input type="password" class="form-control password" placeholder="密码">
+            </div>
+        </div>
+
+        <div class="clearfix"></div>
+
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" value="">
+                <i class="input-helper"></i>
+                记住我的登录状态
+            </label>
+        </div>
+
+        <button class="btn btn-login btn-danger btn-float">
+            <i class="zmdi zmdi-arrow-forward"></i>
+        </button>
+
+    </div>
+
+    <!-- Javascript Libraries -->
+    @Scripts.Render("~/bundles/Components/Base")
+    @Scripts.Render("~/bundles/Components/Waves")
+    @Scripts.Render("~/bundles/Components/SweetAlert")
+    @Scripts.Render("~/bundles/jack-tool")
+
+    <!-- Page Script -->
+    <script type="text/javascript">
+        $(function () {
+            $(".btn-login").on("click", btnLogin_click);
+            $("#l-login input[type=text]").on("keydown", input_keydown);
+            $("#l-login input[type=password]").on("keydown", input_keydown);
+        });
+
+        function input_keydown(e) {
+            if (e.keyCode == 13) {
+                btnLogin_click(e);
+                return false;
+            }
+        }
+
+        //登录按钮点击事件处理
+        function btnLogin_click(e) {
+            //获取登录所需的参数
+            var loginArgs = {
+                LoginName: $(".user-name").val(),
+                Password: $(".password").val()
+            }
+
+            if (!loginArgs.LoginName || !loginArgs.Password) {
+                return swal("登录失败", "请填写用户名和密码", "warning");
+            }
+
+            //提交登录信息到服务器
+            swal({
+                title: "登陆中",
+                text: "请稍后......",
+                type: "info",
+                showConfirmButton: false,
+            })
+            jackTool.tools.net.post("@Url.Action("Login")", loginArgs, login_callback);
+        }
+
+        //服务器登录处理业务回调
+        function login_callback(result) {
+            if (!result || result.RCode != 0) {
+                return swal({
+                    title: "登录失败",
+                    text: result.RMsg,
+                    type: "error",
+                    confirmButtonText: "Back",
+                    timer: 2000
+                });
+            }
+
+            //记录登录信息
+            jackTool.logininfo.set(result.Data);
+
+            window.location.href = "@Url.Action("index", "home")";
+        }
+    </script>
+</body>
+</html>

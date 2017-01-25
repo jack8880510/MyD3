@@ -1,0 +1,8 @@
+key.txt
+/Code/packages
+.vs
+EFDemo
+bin
+obj
+*.user
+log

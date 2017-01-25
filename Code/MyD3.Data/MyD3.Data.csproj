@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{B8CEDCD7-2868-49F2-8462-5AB59B743A7D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DS.Data</RootNamespace>
+    <AssemblyName>DS.Data</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.0.0\lib\net45\EntityFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework6.Npgsql, Version=3.1.1.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework6.Npgsql.3.1.1\lib\net45\EntityFramework6.Npgsql.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Npgsql, Version=3.1.9.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Npgsql.3.1.9\lib\net45\Npgsql.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="EF\EfRepository.cs" />
+    <Compile Include="EF\DSDbContext.cs" />
+    <Compile Include="EF\Mapping\DictionaryDataMapping.cs" />
+    <Compile Include="EF\Mapping\DictionaryDataDetailMapping.cs" />
+    <Compile Include="EF\Mapping\TargetPageElementDetailMapping.cs" />
+    <Compile Include="EF\Mapping\TargetAuthonizationDetailMapping.cs" />
+    <Compile Include="EF\Mapping\SystemSettingDetailMapping.cs" />
+    <Compile Include="EF\Mapping\PageElementDetailMapping.cs" />
+    <Compile Include="EF\Mapping\ModulePermissionDetailMapping.cs" />
+    <Compile Include="EF\Mapping\UserGroupMapping.cs" />
+    <Compile Include="EF\Mapping\UserMapping.cs" />
+    <Compile Include="EF\Mapping\TargetAuthonizationMapping.cs" />
+    <Compile Include="EF\Mapping\SystemSettingGroupMapping.cs" />
+    <Compile Include="EF\Mapping\PageElementMapping.cs" />
+    <Compile Include="EF\Mapping\PageMapping.cs" />
+    <Compile Include="EF\Mapping\ModulePermissionMapping.cs" />
+    <Compile Include="EF\Mapping\ModuleMapping.cs" />
+    <Compile Include="EF\Mapping\GroupMapping.cs" />
+    <Compile Include="EF\Mapping\DictionaryIndexMapping.cs" />
+    <Compile Include="EF\Mapping\SystemSettingMapping.cs" />
+    <Compile Include="EF\IDbContext.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MyD3.Common\MyD3.Common.csproj">
+      <Project>{2d37d183-8306-455d-9d1e-bf0efd7b36ec}</Project>
+      <Name>DS.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MyD3.Data.Interface\MyD3.Data.Interface.csproj">
+      <Project>{851ebcec-b387-4d1b-8957-07c072925a3d}</Project>
+      <Name>DS.Data.Interface</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MyD3.Entity\MyD3.Entity.csproj">
+      <Project>{6ccbc61c-16e0-40df-9b2f-1ebe8e516749}</Project>
+      <Name>DS.Entity</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

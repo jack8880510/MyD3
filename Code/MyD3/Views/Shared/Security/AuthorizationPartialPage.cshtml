@@ -1,0 +1,141 @@
+﻿<script type="text/x-jsrender" id="authoriz_modal">
+    <div class="modal fade authoriz_model" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">
+                        授权管理
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <table id="authorization-table" class="table table-striped table-vmiddle">
+                        <thead>
+                            <tr>
+                                <th data-column-id="PermissionID" data-identifier="true" data-visible="false">权限编号</th>
+                                <th data-column-id="ModuleID" data-visible="false">模块编号</th>
+                                <th data-column-id="ModuleName" data-sortable="true">模块名称</th>
+                                <th data-column-id="PermissionName" data-sortable="true">权限名称名称</th>
+                                <th data-column-id="Area" data-sortable="true">区域</th>
+                                <th data-column-id="Controler" data-sortable="true">控制器</th>
+                                <th data-column-id="Action" data-sortable="true">访问方法</th>
+                                <th data-column-id="Method" data-sortable="true">访问方式</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{for AllPermissions}}
+                            <tr>
+                                <td>{{>PermissionID}}</td>
+                                <td>{{>ModuleID}}</td>
+                                <td>{{>ModuleName}}</td>
+                                <td>{{>PermissionName}}</td>
+                                <td>{{>Area}}</td>
+                                <td>{{>Controler}}</td>
+                                <td>{{>Action}}</td>
+                                <td>{{>Method}}</td>
+                            </tr>
+                            {{/for}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" data-dismiss="modal" class="btn btn-default">关闭</button>
+                    <button type="button" id="save_authoriz" class="btn btn-primary" data-target-id="{{>ID}}" }>保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+<!-- 授权对话框相关脚本 -->
+<script type="text/javascript" id="authoriz_dialog">
+    function dialog_authoriz(data, save_action) {
+        //使用分组授权信息初始化列表
+        var modal_html = $($("#authoriz_modal").render(data));
+
+        //初始化页面
+        set_authoriz_dialog_attr(modal_html, data, save_action);
+    }
+
+    /**
+     * 为对话框中的内容提供初始值设定
+     */
+    function set_authoriz_dialog_attr(dialog, authoriz_data, save_action) {
+        //清除上一次访问残余
+        $(".authoriz_model").remove();
+
+        //设置Dialog不会在点击其他地方时被关闭
+        dialog.modal({
+            backdrop: "static"
+        });
+
+        //初始化授权列表
+        dialog.find("#authorization-table").bootgrid({
+            navigation: 0,
+            selection: true,
+            multiSelect: true,
+            keepSelection: true,
+            rowCount: -1
+        }).on("loaded.rs.jquery.bootgrid", function (e) {
+            //使用underscore将所有已授权的权限ID提取成数组
+            var authorization_permission = _.map(
+                authoriz_data.TargetAuthorization.ModulePermissionAuthorizations,
+                function (data) { return data.PermissionID; }
+            );
+
+            $(this).bootgrid("select", authorization_permission);
+        });
+
+        //初始化保存按钮点击事件
+        dialog.find("#save_authoriz").data("save-action", save_action);
+        dialog.find("#save_authoriz").on("click", btnSaveAuthoriz_click);
+    }
+
+    /**
+    * 授权按钮点击事件
+    */
+    function btnSaveAuthoriz_click(e) {
+        //获取已选择的所有权限
+        var selected = $(".authoriz_model #authorization-table").bootgrid("getSelectedRows");
+        //获取需要授权的目标对象
+        var target_id = $(this).data("target-id");
+        //获取授权使用的action
+        var save_action = $(this).data("save-action");
+
+        //禁用按钮处理
+        $('.authoriz_model #save_authoriz').text("正在处理");
+        $('.authoriz_model #save_authoriz').attr('disabled', 'disabled');
+        $('.authoriz_model input').attr('disabled', 'disabled');
+        swal({
+            title: "处理中",
+            text: "请稍后......",
+            type: "info",
+            showConfirmButton: false,
+        })
+
+        //POST数据到服务器进行授权
+        jackTool.tools.net.post(save_action, { TargetID: target_id, Permissions: selected },
+            function (result) {
+                if (!result || result.RCode != 0) {
+                    $('.authoriz_model #save_authoriz').text("保存");
+                    $('.authoriz_model #save_authoriz').removeAttr('disabled');
+                    $('.authoriz_model input').removeAttr('disabled');
+                    return swal({
+                        title: "失败",
+                        text: result ? result.RMsg : "授权失败",
+                        type: "error",
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                }
+                $(".authoriz_model").modal("hide");
+                swal({
+                    title: "成功",
+                    text: "授权修改成功",
+                    type: "success",
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            });
+    }
+</script>
